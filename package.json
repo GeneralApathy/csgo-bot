@@ -1,0 +1,27 @@
+{
+  "name": "csgo-bot",
+  "version": "1.0.0",
+  "description": "New version of the CSGOSkins-Bot, improved and now with players' stats.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://GeneralApathy@github.com/GeneralApathy/csgo-bot"
+  },
+  "keywords": [
+    "csgo",
+    "skins",
+    "stats",
+    "inventory",
+    "ruski",
+    "blyat"
+  ],
+  "author": "Emiliano Maccaferri",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/GeneralApathy/csgo-bot/issues"
+  },
+  "homepage": "https://github.com/GeneralApathy/csgo-bot"
+}
