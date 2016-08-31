@@ -504,7 +504,7 @@ bot.command("stats", "Fetches stats for the player inserted", false, (args, mess
       "\n<b> K/D Ratio</b>: " + (statsArray[0].value / statsArray[1].value).toFixed(2) +
       "\n<b>Total planted bombs</b>: " + statsArray[2].value +
       "\n<b>Total defused bombs</b>: " + statsArray[3].value +
-      "\n<b>Knife kills</b>: " + statsArray[5].value +
+      "\n<b>Knife kills</b>: " + statsArray[4].value +
       "\n<b>Zeus kills</b>: " + statsArray[12].value +
       "\n<b>Grenade kills</b>: " + statsArray[15].value +
       "\n<b>Headshots</b>: " + statsArray[5].value +
