@@ -37,6 +37,12 @@ bot.command("start", "Starts the bot", false, (args, message) => {
 
 });
 
+bot.command("help", "Show the help message", false, (args, message) => {
+
+
+
+});
+
 bot.command("weapon", "Fetches a weapon", false, (args, message) => {
 
   if(cooldown.contains(message.from.id)){
@@ -293,15 +299,244 @@ bot.command("case", "Fetches a case", false, (args, message) => {
 
 bot.command("stats", "Fetches stats for the player inserted", false, (args, message) => {
 
-  var profile = args.toString().replace(/,/g, " ");
+  if(cooldown.contains(message.from.id)){
 
-  stats.getStats(base_stats, profile, function(err, response){
+    console.log(message.from.id + " has been blocked by the flood protection");
+    message.reply("(Flood protection) Wait 3,5 secs to make that command again.");
+    return false;
 
-    console.log(response);
+  }
 
-  });
+  var profile = args[0].toString();
+  var vac;
+  var tradeBan;
+  var toPrint;
+
+  console.log(args);
+
+  if(!args[1]){
+
+    message.reply("Correct syntax: /stats <customURL/steamID64> <csgo/steam>\n"
+    + "Example: /stats generalapathy_ steam");
+
+    return false;
+
+  }
+
+  if(profile == ""){
+
+    message.reply("Are you searching for 'nothing'?");
+    return false;
+
+  }
+
+  stats.getStats(base_stats, profile, function(iderror, err, stats, idStats){
+
+    if(iderror){
+
+      message.reply("Custom URL/SteamID64 not found");
+      return false;
+
+    }
+
+    if(err){
+
+      message.reply("Request error");
+      return false;
+
+    }
+
+    if(idStats.profile.vacBanned == 0){
+
+      vac = "<i>No VAC bans</i>";
+
+    }else{
+
+      vac = "<b>VAC banned</b>";
+
+    }
+
+    if(idStats.profile.tradeBanState == "None"){
+
+      tradeBan = "\n<i>Not trade banned</i>";
+
+    }else{
+
+      tradeBan = "\n<b>Trade banned</b>"
+
+    }
+
+    switch(args[1].toLowerCase()){
+
+      case "steam":
+
+      console.log();
+
+      if(idStats.profile.mostPlayedGames == undefined){
+
+        toPrint = "<i> None </i>"
+
+      }else{
+
+        var mostPlayedGames = idStats.profile.mostPlayedGames[0]["mostPlayedGame"];
+        var gamesArray = [];
+
+        for(key in mostPlayedGames){
+
+          if(typeof mostPlayedGames[key]["gameName"] == 'undefined') break;
+
+            gamesArray.push({"gamename": mostPlayedGames[key]["gameName"], "hoursPlayed": mostPlayedGames[key]["hoursOnRecord"]});
+
+        }
+
+        var n = gamesArray.length;
+        var games = [];
+
+        for(var i = 0; i<n; i++){
+
+          games.push(gamesArray[i]["gamename"] + " (" + gamesArray[i]["hoursPlayed"] + "h)");
+
+        }
+
+        var converted = games.toString().replace(/,/g, "☼");
+        toPrint = converted.replace(/☼/g, ", ");
+
+      }
+
+      message.reply(
+      "<a href='" + idStats.profile.avatarFull[0] + "'>Avatar</a>" +
+      "\n<b>Username</b>: " + idStats.profile.steamID +
+      "\n<b>SteamID64</b>: " + idStats.profile.steamID64 +
+      "\n<b>Status</b>: " + idStats.profile.onlineState +
+      "\n<b>Profile privacy</b>: " + idStats.profile.privacyState +
+      "\n<b>From</b>: " + idStats.profile.location +
+      "\n<b>Member since</b>: " + idStats.profile.memberSince +
+      "\n" + vac +
+      tradeBan +
+      "\n<b>Last games played</b>: " + toPrint
+     , {parse_mode: "HTML"});
+
+      break;
+
+      case "csgo":
+
+      if(stats.playerstats == undefined){
+
+        message.reply("It seems that this user doesn't have CS:GO in his library");
+        return false;
+      }
+
+      var keys = [
+
+        "total_kills",
+        "total_deaths",
+        "total_planted_bombs",
+        "total_defused_bombs",
+        "total_kills_knife",
+        "total_kills_headshot",
+        "total_wins_pistolround",
+        "total_wins_map_de_dust2",
+        "last_match_wins",
+        "total_shots_fired",
+        "total_shots_hit",
+        "total_rounds_played",
+        "total_kills_taser",
+        "last_match_kills",
+        "last_match_deaths",
+        "total_kills_hegrenade",
+
+      ];
+
+      function hasValue(obj, key, value) {
+        return obj.hasOwnProperty(key) && obj[key] === value;
+      }
+
+      var resArray = stats.playerstats.stats;
+      var statsArray = [];
+
+      for (var i = 0; i < keys.length; i++) {
+
+        resArray.some(function(found){
+
+          if(hasValue(found, "name", keys[i])){
+
+            statsArray.push(found);
+
+          }
+
+        });
+
+        if(typeof statsArray[i] == 'undefined'){
+
+          console.log("HEY: " + keys[i]);
+          statsArray.push({"name": keys[i], "value": 'None'});
+
+        }
+      }
+
+      console.log(statsArray);
+
+      var wins = statsArray[8].value;
+      var msg;
+
+      if(wins == 16){
+
+        msg = "\n<i>Last match won</i>";
+
+      }
+
+      if(wins == 15){
+
+        msg = "\n<i>Last match tied</i>";
+
+      }
+
+      if(wins < 15){
+
+        msg = "\n<i>Last match lost</i>";
+
+      }
+
+      message.reply(
+      "<a href='" + idStats.profile.avatarFull[0] + "'>Avatar</a>" +
+      "\n<b>Total kills</b>: " + statsArray[0].value +
+      "\n<b>Total deaths</b>: " + statsArray[1].value +
+      "\n<b> K/D Ratio</b>: " + (statsArray[0].value / statsArray[1].value).toFixed(2) +
+      "\n<b>Total planted bombs</b>: " + statsArray[2].value +
+      "\n<b>Total defused bombs</b>: " + statsArray[3].value +
+      "\n<b>Knife kills</b>: " + statsArray[5].value +
+      "\n<b>Zeus kills</b>: " + statsArray[12].value +
+      "\n<b>Grenade kills</b>: " + statsArray[15].value +
+      "\n<b>Headshots</b>: " + statsArray[5].value +
+      "\n<b>Pistol rounds won</b>: " + statsArray[6].value +
+      "\n<b>Shots fired</b>: " + statsArray[9].value +
+      "\n<b>Shots hit</b>: " + statsArray[10].value +
+      "\n<b>Rounds played</b>: " + statsArray[11].value +
+      "\n<b>Rounds played on de_dust2</b>: " + statsArray[7].value +
+      msg +
+      "\n<b>Last match kills</b>: " + statsArray[13].value +
+      "\n<b>Last match deaths</b>: " + statsArray[14].value +
+      "\n<b>Last match K/D</b>: " + (statsArray[13].value / statsArray[14].value).toFixed(2)
+      ,{parse_mode: "HTML"});
+
+      break;
+
+      default:
+      break;
+
+    }
+
+    cooldown.push(message.from.id);
+
+    setTimeout(function(){
+
+      cooldown.remove(message.from.id);
+
+    }, 3500);
+
 
 });
+    });
 
 Array.prototype.contains = function ( needle ) {
    for (i in this) {
